@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>தமிழ் இலக்கணம் | AI Grammar Evaluation</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Catamaran:wght@400;500;600;700;800&family=Noto+Serif+Tamil:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="page">
+
+<header class="topbar">
+  <a class="brand" href="#">
+    <div class="brand-mark">அ</div>
+    <div>
+      <strong>தமிழ் இலக்கணம்</strong>
+      <small>AI Grammar Evaluation</small>
+    </div>
+  </a>
+
+  <nav class="nav">
+    <a href="#about">அமைப்பைப் பற்றி</a>
+    <a href="#features">சிறப்பம்சங்கள்</a>
+    <a href="#auth">உள்நுழைவு</a>
+  </nav>
+
+  <div class="lang">தமிழ் · தமிழ் AI</div>
+</header>
+
+<main class="hero">
+
+  <section class="copy" id="about">
+    <div class="eyebrow">
+      <i class="dot"></i>
+      செயற்கை நுண்ணறிவு · தமிழ் NLP
+    </div>
+
+    <h1>
+      தமிழை
+      <span class="h1-accent">சரியாக</span>
+      <br>
+      எழுதுவோம்.
+    </h1>
+
+    <p class="lead">
+      உங்கள் தமிழ் உரையை செயற்கை நுண்ணறிவு மூலம் மதிப்பிட்டு,
+      எழுத்துப்பிழை, இலக்கணப்பிழை மற்றும் வாக்கிய அமைப்புப் பிழைகளை
+      கண்டறிந்து திருத்த உதவும் நவீன அமைப்பு.
+    </p>
+
+    <div class="features" id="features">
+      <div class="pill">✓ எழுத்துப்பிழை கண்டறிதல்</div>
+      <div class="pill">✓ இலக்கண மதிப்பீடு</div>
+      <div class="pill">✓ வாக்கியத் திருத்தம்</div>
+      <div class="pill"><b>✦ AI Score</b></div>
+    </div>
+
+    <div class="quote">
+      "யாமறிந்த மொழிகளிலே தமிழ் மொழி போல்
+      இனிதாவது எங்கும் காணோம்."
+    </div>
+  </section>
+
+  <section class="visual" aria-label="Tamil themed illustration">
+
+    <div class="manuscript">
+      <div class="tamil-lines">
+        <span>தமிழ் மொழி இனிது</span>
+        <span>அறம் · அறிவு · கல்வி</span>
+        <span>எழுத்தும் சொல்லும்</span>
+        <span>இலக்கணம் கற்போம்</span>
+        <span>தமிழை வளர்ப்போம்</span>
+      </div>
+      <div class="lotus">🪷</div>
+    </div>
+
+    <div class="pearl p1">அ</div>
+    <div class="pearl p2">தமிழ்</div>
+    <div class="pearl p3">AI</div>
+
+    <div class="badge">
+      <div class="badge-icon">✦</div>
+      <div>
+        <strong>AI Analysis</strong>
+        <span>Context-aware Tamil</span>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-top">
+        <span>மொத்த மதிப்பெண்</span>
+        <span>✓</span>
+      </div>
+      <div class="score">92%</div>
+      <div class="bar"><i></i></div>
+      <div class="score-note">Spelling · Grammar · Sentence</div>
+    </div>
+
+    <div class="auth" id="auth">
+
+      <div class="auth-head">
+        <h2>வணக்கம்! 👋</h2>
+        <p>உங்கள் தமிழ் AI பயணத்தைத் தொடங்குங்கள்</p>
+      </div>
+
+      <div class="tabs">
+        <button
+          type="button"
+          class="tab {{ 'active' if active_tab != 'signup' else '' }}"
+          id="loginTab"
+          onclick="switchTab('login')">
+          உள்நுழைவு
+        </button>
+
+        <button
+          type="button"
+          class="tab {{ 'active' if active_tab == 'signup' else '' }}"
+          id="signupTab"
+          onclick="switchTab('signup')">
+          பதிவு செய்க
+        </button>
+      </div>
+
+      <div class="form">
+
+        <div id="loginForm" class="{{ 'hidden' if active_tab == 'signup' else '' }}">
+          <form method="POST" action="{{ url_for('login') }}">
+
+            <div class="field">
+              <label>பயனர் பெயர் / மின்னஞ்சல்</label>
+              <div class="input-wrap">
+                <span>◉</span>
+                <input name="username" type="text" placeholder="உங்கள் பெயர் அல்லது email" required>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>கடவுச்சொல்</label>
+              <div class="input-wrap">
+                <span>●</span>
+                <input name="password" type="password" placeholder="கடவுச்சொல்" required>
+              </div>
+            </div>
+
+            <div class="row">
+              <label class="remember">
+                <input type="checkbox">
+                என்னை நினைவில் வைத்திரு
+              </label>
+              <a href="#" onclick="forgot(event)">கடவுச்சொல் மறந்துவிட்டதா?</a>
+            </div>
+
+            <button class="primary" type="submit">உள்நுழைக →</button>
+          </form>
+
+          <div class="divider">அல்லது</div>
+
+          <button class="google" onclick="startGoogle()">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.6 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.4 5.1 29.5 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.2-.1-2.4-.4-3.5z"/>
+              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.4 5.1 29.5 3 24 3c-7.7 0-14.3 4.3-17.7 11.7z"/>
+              <path fill="#4CAF50" d="M24 45c5.3 0 10.1-2 13.7-5.4l-6.3-5.3C29.4 36 26.9 37 24 37c-5.4 0-9.9-3.4-11.5-8.2l-6.5 5C9.6 40.6 16.2 45 24 45z"/>
+              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1 3-3.1 5.5-5.9 7.2l6.3 5.3C39.1 37.5 43 31.5 43 24c0-1.2-.1-2.4-.4-3.5z"/>
+            </svg>
+            Google மூலம் தொடரவும்
+          </button>
+
+          <div class="msg">{{ login_error or '' }}</div>
+        </div>
+        <div id="signupForm" class="{{ 'hidden' if active_tab != 'signup' else '' }}">
+          <form method="POST" action="{{ url_for('register') }}">
+
+            <div class="field">
+              <label>பயனர் பெயர்</label>
+              <div class="input-wrap">
+                <span>◉</span>
+                <input name="username" type="text" placeholder="உங்கள் பெயர்" required>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>மின்னஞ்சல்</label>
+              <div class="input-wrap">
+                <span>@</span>
+                <input name="email" type="email" placeholder="you@example.com" required>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>கடவுச்சொல்</label>
+              <div class="input-wrap">
+                <span>●</span>
+                <input name="password" type="password" placeholder="குறைந்தது 8 எழுத்துகள்" required>
+              </div>
+            </div>
+
+            <button class="primary" type="submit">கணக்கை உருவாக்கு →</button>
+          </form>
+
+          <div class="divider">அல்லது</div>
+
+          <button class="google" onclick="startGoogle()">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.6 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.4 5.1 29.5 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.2-.1-2.4-.4-3.5z"/>
+              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.4 5.1 29.5 3 24 3c-7.7 0-14.3 4.3-17.7 11.7z"/>
+              <path fill="#4CAF50" d="M24 45c5.3 0 10.1-2 13.7-5.4l-6.3-5.3C29.4 36 26.9 37 24 37c-5.4 0-9.9-3.4-11.5-8.2l-6.5 5C9.6 40.6 16.2 45 24 45z"/>
+              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1 3-3.1 5.5-5.9 7.2l6.3 5.3C39.1 37.5 43 31.5 43 24c0-1.2-.1-2.4-.4-3.5z"/>
+            </svg>
+            Google மூலம் பதிவு செய்க
+          </button>
+
+          <div class="msg">{{ signup_error or '' }}</div>
+        </div>
+
+        <div class="note">
+          தொடர்வதன் மூலம் உங்கள் கணக்கு விவரங்களை
+          பாதுகாப்பாகப் பயன்படுத்த ஒப்புக்கொள்கிறீர்கள்.
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<footer class="footer">
+  <span>© 2026 தமிழ் இலக்கண மதிப்பீட்டு அமைப்பு</span>
+  <span>AI · NLP · தமிழ் மொழித் தொழில்நுட்பம்</span>
+</footer>
+
+</div>
+
+<script>
+function switchTab(tab){
+  document.getElementById('loginTab').classList.toggle('active', tab === 'login');
+  document.getElementById('signupTab').classList.toggle('active', tab === 'signup');
+  document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('signupForm').classList.toggle('hidden', tab !== 'signup');
+}
+
+function forgot(e){
+  e.preventDefault();
+  alert('Password reset-ஐ implement செய்ய வேண்டும்.');
+}
+
+function startGoogle(){
+  alert('Google Sign-In இன்னும் configure செய்யப்படவில்லை. Google OAuth Client ID தேவை.');
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>தமிழ் AI Chat</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Catamaran:wght@400;500;600;700;800&family=Noto+Serif+Tamil:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="page chat-page">
+
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <div class="sidebar-brand">
+        <div class="brand-mark">அ</div>
+        <div>
+          <strong>தமிழ் இலக்கணம்</strong>
+        </div>
+      </div>
+      <button class="new-chat-btn" id="newChatBtn">
+        + புதிய அரட்டை
+      </button>
+    </div>
+
+    <div class="sidebar-history" id="historyList">
+      <div class="history-label">வரலாறு</div>
+    </div>
+
+    <div class="sidebar-footer">
+      <span>வணக்கம், {{ username }}</span>
+      <a href="{{ url_for('logout') }}">வெளியேறு</a>
+    </div>
+  </aside>
+
+
+  <main class="chat-main">
+
+    <header class="chat-topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="icon-btn sidebar-toggle" id="sidebarToggle" title="History">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <div class="chat-title">
+          <strong>தமிழ் AI Chat</strong>
+          <span>Ask about spelling, grammar, or sentence structure</span>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="icon-btn" id="chartBtn" title="Chart Analysis" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="20" x2="12" y2="10"/>
+            <line x1="18" y1="20" x2="18" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="16"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div id="messages" class="chat-messages">
+      <div class="chat-messages-inner" id="messagesInner"></div>
+    </div>
+
+    <div class="chat-input-wrap">
+      <form id="chatForm" class="chat-input-row">
+        <input
+          id="chatInput"
+          type="text"
+          placeholder="உங்கள் செய்தியை இங்கே தட்டச்சு செய்யவும்..."
+          autocomplete="off">
+        <button type="submit" class="chat-send-round" id="sendBtn" aria-label="Send">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </form>
+      <div class="chat-hint">தமிழ் AI தவறுகள் செய்யக்கூடும். முக்கியமான தகவலை சரிபார்க்கவும்.</div>
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+const form            = document.getElementById('chatForm');
+const input           = document.getElementById('chatInput');
+const messagesEl      = document.getElementById('messagesInner');
+const historyList     = document.getElementById('historyList');
+const newChatBtn      = document.getElementById('newChatBtn');
+const sidebar         = document.getElementById('sidebar');
+const sidebarToggle   = document.getElementById('sidebarToggle');
+const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+const chartBtn        = document.getElementById('chartBtn');
+
+let activeSubmissionId = null;
+
+function truncate(text, len = 30){
+  return text.length > len ? text.slice(0, len) + '…' : text;
+}
+
+function renderSubmission(sub){
+  appendBubble(sub.input_text, 'user');
+  if(sub.clean_text){
+    appendBubble(sub.clean_text, 'bot');
+  }
+}
+
+function appendBubble(text, who){
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + who;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar';
+  avatar.textContent = who === 'user' ? 'நீ' : 'அ';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.textContent = text;
+
+  row.appendChild(avatar);
+  row.appendChild(bubble);
+  messagesEl.appendChild(row);
+  messagesEl.parentElement.scrollTop = messagesEl.parentElement.scrollHeight;
+  return bubble;
+}
+
+function showTyping(){
+  const row = document.createElement('div');
+  row.className = 'msg-row bot';
+  row.id = 'typingRow';
+  row.innerHTML = `
+    <div class="msg-avatar">அ</div>
+    <div class="msg-bubble">
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+    </div>`;
+  messagesEl.appendChild(row);
+  messagesEl.parentElement.scrollTop = messagesEl.parentElement.scrollHeight;
+}
+function removeTyping(){
+  const row = document.getElementById('typingRow');
+  if(row) row.remove();
+}
+
+async function loadHistory(){
+  historyList.innerHTML = '<div class="history-label">வரலாறு</div>';
+  try{
+    const res = await fetch('/api/submissions');
+    const rows = await res.json();
+
+    if(rows.length === 0){
+      const empty = document.createElement('div');
+      empty.className = 'history-item';
+      empty.style.cursor = 'default';
+      empty.style.opacity = '0.6';
+      empty.textContent = 'இதுவரை உரையாடல் இல்லை';
+      historyList.appendChild(empty);
+      return;
+    }
+
+    rows.forEach(sub => {
+      const item = document.createElement('div');
+      item.className = 'history-item' + (sub.submission_id === activeSubmissionId ? ' active' : '');
+      item.textContent = truncate(sub.input_text);
+      item.dataset.id = sub.submission_id;
+      item.addEventListener('click', () => selectSubmission(sub));
+      historyList.appendChild(item);
+    });
+  }catch(err){
+    console.error('Failed to load history', err);
+  }
+}
+
+function selectSubmission(sub){
+  activeSubmissionId = sub.submission_id;
+  messagesEl.innerHTML = '';
+  renderSubmission(sub);
+  highlightActive();
+  closeSidebarMobile();
+}
+
+function highlightActive(){
+  [...historyList.children].forEach(el => {
+    if(el.classList && el.classList.contains('history-item')){
+      el.classList.toggle('active', Number(el.dataset.id) === activeSubmissionId);
+    }
+  });
+}
+
+function startNewChat(){
+  activeSubmissionId = null;
+  messagesEl.innerHTML = '';
+  highlightActive();
+  input.focus();
+}
+
+function openSidebarMobile(){ sidebar.classList.add('open'); sidebarBackdrop.classList.add('show'); }
+function closeSidebarMobile(){ sidebar.classList.remove('open'); sidebarBackdrop.classList.remove('show'); }
+sidebarToggle.addEventListener('click', openSidebarMobile);
+sidebarBackdrop.addEventListener('click', closeSidebarMobile);
+
+newChatBtn.addEventListener('click', startNewChat);
+
+chartBtn.addEventListener('click', () => {
+  alert('பகுப்பாய்வு அம்சம் விரைவில் வருகிறது! (Coming soon)');
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = input.value.trim();
+  if(!text) return;
+
+  appendBubble(text, 'user');
+  input.value = '';
+  showTyping();
+
+  try{
+    const res = await fetch('/api/send', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ message: text })
+    });
+    const data = await res.json();
+    removeTyping();
+
+    if(data.reply){
+      appendBubble(data.reply, 'bot');
+    }
+    if(data.submission_id){
+      activeSubmissionId = data.submission_id;
+      loadHistory();
+    }
+  }catch(err){
+    removeTyping();
+    console.error(err);
+  }
+});
+
+loadHistory();
+</script>
+
+</body>
+</html>
