@@ -1,12 +1,27 @@
 import os
+import requests
 
 import psycopg2
 import psycopg2.extras
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
+
+
+# =========================
+# OLLAMA CONFIGURATION
+# =========================
+
+OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_MODEL = "tamilgrammar"
+
+
+# =========================
+# POSTGRESQL CONFIGURATION
+# =========================
 
 DB_CONFIG = dict(
     host="localhost",
@@ -25,6 +40,7 @@ def init_db():
     """Create the users table if it doesn't already exist."""
     conn = get_db_connection()
     cur = conn.cursor()
+
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
@@ -36,17 +52,27 @@ def init_db():
         );
         """
     )
+
     conn.commit()
     cur.close()
     conn.close()
 
 
+# =========================
+# HOME
+# =========================
+
 @app.route("/")
 def index():
     if session.get("user_id"):
         return redirect(url_for("chat"))
+
     return render_template("index.html", active_tab="login")
 
+
+# =========================
+# REGISTER
+# =========================
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -68,15 +94,17 @@ def register():
             signup_error="கடவுச்சொல் குறைந்தது 8 எழுத்துகள் இருக்க வேண்டும்.",
         )
 
-    password_hash = generate_password_hash(password) 
+    password_hash = generate_password_hash(password)
 
     conn = get_db_connection()
     cur = conn.cursor()
+
     try:
         cur.execute(
             "SELECT user_id FROM users WHERE username = %s OR email = %s",
             (username, email),
         )
+
         if cur.fetchone():
             return render_template(
                 "index.html",
@@ -92,16 +120,23 @@ def register():
             """,
             (username, email, password_hash),
         )
+
         user_id = cur.fetchone()[0]
         conn.commit()
+
     finally:
         cur.close()
         conn.close()
 
     session["user_id"] = user_id
     session["username"] = username
+
     return redirect(url_for("chat"))
 
+
+# =========================
+# LOGIN
+# =========================
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -116,19 +151,28 @@ def login():
         )
 
     conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur = conn.cursor(
+        cursor_factory=psycopg2.extras.RealDictCursor
+    )
+
     try:
         cur.execute(
             "SELECT user_id, username, password_hash FROM users "
             "WHERE username = %s OR email = %s",
             (identifier, identifier),
         )
+
         user = cur.fetchone()
+
     finally:
         cur.close()
         conn.close()
 
-    if not user or not check_password_hash(user["password_hash"], password):
+    if not user or not check_password_hash(
+        user["password_hash"],
+        password
+    ):
         return render_template(
             "index.html",
             active_tab="login",
@@ -137,8 +181,13 @@ def login():
 
     session["user_id"] = user["user_id"]
     session["username"] = user["username"]
+
     return redirect(url_for("chat"))
 
+
+# =========================
+# LOGOUT
+# =========================
 
 @app.route("/logout")
 def logout():
@@ -146,43 +195,123 @@ def logout():
     return redirect(url_for("index"))
 
 
+# =========================
+# CHAT PAGE
+# =========================
+
 @app.route("/chat")
 def chat():
     if not session.get("user_id"):
         return redirect(url_for("index"))
-    return render_template("chat.html", username=session.get("username"))
 
+    return render_template(
+        "chat.html",
+        username=session.get("username")
+    )
+
+
+# =========================
+# SEND MESSAGE TO OLLAMA
+# =========================
 
 @app.route("/api/send", methods=["POST"])
 def api_send():
-    """Placeholder endpoint - wire up your chatbot / AI logic here."""
+
+    # Check whether the user is logged in
     if not session.get("user_id"):
         return jsonify({"error": "unauthorized"}), 401
 
+    # Receive JSON from frontend
     data = request.get_json(silent=True) or {}
+
+    # Get the Tamil text
     user_message = data.get("message", "").strip()
 
+    # Check empty message
     if not user_message:
         return jsonify({"error": "empty message"}), 400
 
-    reply = "இந்த அம்சம் இன்னும் உருவாக்கப்படவில்லை."
-    return jsonify({"reply": reply})
+    try:
 
+        # Send Tamil text to Ollama
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": OLLAMA_MODEL,
+                "prompt": user_message,
+                "stream": False
+            },
+            timeout=120
+        )
+
+        # Raise error if Ollama returns an error
+        response.raise_for_status()
+
+        # Get Ollama response
+        result = response.json()
+
+        # Extract corrected Tamil text
+        reply = result.get("response", "").strip()
+
+        # Send result back to frontend
+        return jsonify({
+            "reply": reply
+        })
+
+    except requests.exceptions.ConnectionError:
+
+        return jsonify({
+            "error": "Ollama is not running. Please start Ollama and try again."
+        }), 500
+
+    except requests.exceptions.Timeout:
+
+        return jsonify({
+            "error": "Tamil AI took too long to respond."
+        }), 500
+
+    except requests.exceptions.HTTPError as e:
+
+        return jsonify({
+            "error": f"Ollama error: {str(e)}"
+        }), 500
+
+    except Exception as e:
+
+        return jsonify({
+            "error": f"Unexpected error: {str(e)}"
+        }), 500
+
+
+# =========================
+# SUBMISSION HISTORY
+# =========================
 
 @app.route("/api/submissions")
 def api_submissions():
     """Placeholder - returns empty history until submissions table logic is wired up."""
+
     if not session.get("user_id"):
         return jsonify({"error": "unauthorized"}), 401
+
     return jsonify([])
 
+
+# =========================
+# CHART ANALYSIS
+# =========================
 
 @app.route("/chart-analysis")
 def chart_analysis():
     if not session.get("user_id"):
         return redirect(url_for("index"))
+
     return "Coming soon"
 
+
+# =========================
+# RUN APPLICATION
+# =========================
 
 if __name__ == "__main__":
     init_db()
