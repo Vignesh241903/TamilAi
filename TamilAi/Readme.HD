@@ -6,6 +6,31 @@
 - `templates/chat.html` — empty chatbot page shown after login
 - `static/style.css` — shared stylesheet
 - `requirements.txt` — Python dependencies
+For Ollama:
+
+If venv is NOT there
+
+->Create a new virtual environment inside this new project location:
+
+      python -m venv venv
+
+Wait until it finishes.
+
+->Then install the packages:
+
+       venv\Scripts\python.exe -m pip install flask requests psycopg2-binary werkzeug
+
+->Then run:
+
+      venv\Scripts\python.exe app.py
+If you get the same PowerShell error
+
+Use:
+
+      .\venv\Scripts\python.exe app.py
+
+Notice the .\ at the beginning.
+
 
 ## Setup
 
